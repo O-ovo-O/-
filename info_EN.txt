@@ -1,0 +1,205 @@
+Goal definition:
+================
+
+given input of a,b,c,d,e (each prefixed with line with single integer denoting lines in sub group):
+
+a) bundle person/source location, in format (one per line):
+   
+   A-a,b,c, ...
+   B-b, ...
+   C-a,c, ...
+   D-d, ...
+   ...
+
+   where:
+
+   people             = A,B,C,D, ... (amount of people, one per line: 2...N, 2 <= N <= 50)
+   source_location(s) = a,b,c,d, ... (amount of locations per person: 1...N, 1 <= N <= 10)
+   - any person can have more than 1 - they can start from many locations
+   - there is at least 1 location per person, possibly shared, when all start from same place
+
+c) target_place c, d, e, f, ...
+   (where the meeting could take place, where amount of places 1...N, can also be just source_location, or include/contain it)
+
+d) timespans of free time of each person (more than one line per person possible) in form of:
+   [(A) (YYYY-mm-dd_HH:MM, YYYY-mm-dd_HH:MM)]
+   [(A) (YYYY-mm-dd_HH:MM, YYYY-mm-dd_HH:MM)] # different dates
+   [(B) (YYYY-mm-dd_HH:MM, YYYY-mm-dd_HH:MM)]
+   ...
+
+e) routes/sub-routes in from of:
+   [(a-b), (YYYY-mm-dd_HH:MM, YYYY-mm-dd_HH:MM), (XXXXX.XX)]
+   [(b-c), (YYYY-mm-dd_HH:MM, YYYY-mm-dd_HH:MM), (XXXXX.XX)]
+   [(d-c), (YYYY-mm-dd_HH:MM, YYYY-mm-dd_HH:MM), (XXXXX.XX)]
+   [(e-b), (YYYY-mm-dd_HH:MM, YYYY-mm-dd_HH:MM), (XXXXX.XX)]
+   [(b-c), (YYYY-mm-dd_HH:MM, YYYY-mm-dd_HH:MM), (XXXXX.XX)]
+   [(c-m), (YYYY-mm-dd_HH:MM, YYYY-mm-dd_HH:MM), (XXXXX.XX)] # different dates
+   [(c-m), (YYYY-mm-dd_HH:MM, YYYY-mm-dd_HH:MM), (XXXXX.XX)] # different dates
+   ...
+
+describe/prepare/write algorithm which:
+a0) allows N people to meet in same location (in the same time) (fulfilled ALWAYS, for all of below)
+
+a1) minimize cost - sum of XXXXX.XX for total route (direct, or optionally composing of sub-routes) is minimal, sorted list of (sub-)routes=their total cost
+a2) equal costs   - lowest difference of travel cost between A, B, C
+b1) maximize time - overlapping time of A, B, C, ... after reaching target_place is maximum, sorted list of overlapping periods
+b2) maximize time - overlapping time of A, B, C, ... starting from first shared/common and including time during routes towards/in target_place is maximum
+b3) maximize time - overlapping time of A, B, C, ... counting only time in target_place is maximum
+b4) maximize time - overlapping time of A, B, C, ... including time during common routes towards target_place is maximum,
+    but no longer than 3 days, sorted list of overlapping periods
+b5) maximize time - overlapping time of A, B, C, ... including time during common routes towards target_place is maximum,
+    but no shorted than 3 days, sorted list of overlapping periods
+c1) minimize wait - sum of time for total route, leading to target_place is minimal, sorted list of routes with ascending total time
+c2) minimize wait - sum of time for total route, leading to target_place is minimal,
+    but not less than 00:30 between sub-routes (HH:MM) if any, sorted list of routes with ascending total time
+d1) minimize travel time - sum of time for total route is minimal, sorted list of routes with ascending total time
+d2) maximize travel time - sum of time for total route is maximal, sorted list of routes with descending total time
+e1) maximize amount of sub-routes - sorted list of route('s) by their count
+e2) minimize amount of sub-routes - sorted list of route('s) by their count
+f1) maximize amount of sub-routes - with time between them no less than 3dd, sorted by list of route('s) by their count
+g1) combines a1) + b1)
+g2) combines a1) + c1)
+g3) combines a1) + d1)
+g4) combines a1) + e1)
+g5) combines a1) + a2) + c2) + e2)
+
+When no overlapping time-spans print NO COMMON TIME.
+When no route possible for all participants to reach target_place print NO ROUTES
+When no routes in overlapping time print NO ROUTES IN GIVEN TIMES
+
+TODO: planning return route
+TODO: planning car / train as route delivery
+TODO: suggesting dropping one person to match criteria, suggesting other not mentioned target place
+
+
+
+EXAMPLES:
+=========
+- input does not contain "INPUT:", 
+  it starts one line below, ends before line beginning with "OUTPUT:".
+  Does not contain spaces in front of line - used here to improve visibility.
+- output should not contain "OUTPUT:", starts one line below, ends one line before "END OUTPUT"
+
+simple case 1
+-------------
+INPUT:
+        2        
+        A-a,b
+        B-b
+        1
+        b
+        2
+        [(A) (2019-01-01_00:00, 2020-01-01_00:00)]
+        [(B) (2019-01-01_00:00, 2020-01-01_00:00)]
+        7
+        [(a-b), (2019-02-02_02:00, 2019-02-02_05:00), (400.00)]
+        [(a-b), (2019-02-02_04:00, 2019-02-02_07:30), (350.00)]
+        [(b-a), (2019-02-02_02:22, 2019-02-02_04:44), (444.00)]
+        [(b-c), (2019-02-02_02:22, 2019-02-02_04:44), (800.00)]
+        [(a-d), (2019-02-02_02:00, 2019-02-02_03:00), (725.00)]
+        [(c-a), (2019-02-02_02:22, 2019-02-02_04:44), (700.00)]
+        [(d-b), (2019-02-02_03:30, 2019-02-02_05:30), (225.00)]
+
+OUTPUT:
+        1=400
+        5,7=950
+
+END OUTPUT
+EXPLANATION:
+        Only one person has to travel to target place "b". 
+        Only two routes are possible - direct, and combined.
+
+NO COMMON TIME
+--------------
+INPUT:
+        3
+        A-a,b
+        B-a,b
+        C-a,b
+        1
+        b
+        3
+        [(A) (2015-01-01_00:00, 2018-01-01_00:00)]
+        [(B) (2019-01-01_00:00, 2020-01-01_00:00)]
+        [(C) (2019-01-01_00:00, 2019-01-01_00:00)]
+        1
+        [(a-b), (2019-02-02_02:00, 2019-02-02_05:00), (400.00)]
+OUTPUT:
+   NO COMMON TIME
+END OUTPUT
+EXPLANATION:
+        All people cannot meet in selected time-spans, not overlapping. But if there were overlaps,
+        there is just one route - yet all can start from same starting place as target place.
+
+NO ROUTES
+----------------------------
+INPUT:
+        2
+        A-a,b
+        B-c
+        1
+        d
+        2
+        [(A) (2019-01-01_00:00, 2020-01-01_00:00)]
+        [(B) (2019-01-01_00:00, 2020-01-01_00:00)]
+        4
+        [(a-b), (2019-02-02_02:00, 2019-02-02_05:00), (400.00)]
+        [(c-d), (2019-02-02_04:00, 2019-02-02_07:30), (350.00)]
+        [(b-a), (2019-02-02_02:22, 2019-02-02_04:44), (444.00)]
+        [(d-a), (2019-02-02_02:22, 2019-02-02_04:44), (444.00)]
+OUTPUT:
+        NO ROUTES
+END OUTPUT
+EXPLANATION:
+        Person B can reach location d. Person A cannot, as only d-a route is given.
+
+C.
+---------
+INPUT:
+        2
+        A-a,b
+        B-b
+        3
+        c
+        d
+        e
+        4
+        [(A) (2019-05-07_00:00, 2019-05-14_00:00)]
+        [(A) (2019-06-07_00:00, 2019-06-14_00:00)]
+        [(A) (2019-05-14_00:00, 2019-05-21_00:00)]
+        [(B) (2019-05-15_00:00, 2019-07-01_00:00)]
+        8
+        [(a-c), (2019-05-07_13:00, 2019-05-14_21:00), (3400.00)]
+        [(a-e), (2019-05-07_07:00, 2019-05-14_21:00), (960.00)]
+        [(a-d), (2019-02-02_02:22, 2019-02-02_04:44), (444.00)]
+        [(b-c), (2019-02-02_02:22, 2019-02-02_04:44), (444.00)] 
+        [(b-c), (2019-02-02_02:22, 2019-02-02_04:44), (444.00)] 
+        [(b-e), (2019-02-02_02:22, 2019-02-02_04:44), (444.00)] 
+OUTPUT:
+
+END OUTPUT
+EXPLANATION:
+
+
+D.
+---------
+INPUT:
+        2
+        A-a,b
+        B-b
+        1
+        c
+
+OUTPUT:
+
+END OUTPUT
+EXPLANATION:
+
+E.
+---------
+INPUT:
+
+OUTPUT:
+
+END OUTPUT
+EXPLANATION:
